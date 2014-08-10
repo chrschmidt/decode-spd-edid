@@ -41,12 +41,12 @@ char * get_i2c_bus_name (const char * id) {
 }
 
 int do_eeprom (int device, const unsigned char * eeprom) {
-  printf ("\nAnalyzing client 0x%02x\n", device);
+  printf ("Analyzing client 0x%02x\n", device);
   switch (eeprom[2]) {
   case MEMTYPE_SDR:
-  case MEMTYPE_DDRSDR:
-  case MEMTYPE_DDR2SDR: do_sdram ((struct sdram_spd *) eeprom); break;
-  case MEMTYPE_DDR3SDR: do_ddr3 ((struct ddr3_sdram_spd *) eeprom); break;
+  case MEMTYPE_DDR:
+  case MEMTYPE_DDR2: do_sdram ((struct sdram_spd *) eeprom); break;
+  case MEMTYPE_DDR3: do_ddr3 ((struct ddr3_sdram_spd *) eeprom); break;
   case 0xff:
     if (eeprom[0]==0x00 && eeprom[1]==0xff && eeprom[2]==0xff && eeprom[3]==0xff &&
         eeprom[4]==0xff && eeprom[5]==0xff && eeprom[6]==0xff && eeprom[7]==0x00)

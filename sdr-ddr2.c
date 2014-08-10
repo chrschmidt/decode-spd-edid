@@ -9,10 +9,10 @@
 
 static int latency (int memtype, double cyclen, int value) {
   switch (memtype) {
-  case MEMTYPE_SDR: 
+  case MEMTYPE_SDR:
     return (int) ceil ((double) value / cyclen);
-  case MEMTYPE_DDRSDR:
-  case MEMTYPE_DDR2SDR:
+  case MEMTYPE_DDR:
+  case MEMTYPE_DDR2:
     return (int) ceil ((double) value / 4.0 / cyclen);
   }
   return -1;
@@ -46,14 +46,14 @@ void do_sdram (const struct sdram_spd * eeprom) {
 
   /* general module type */
   num_ranks = eeprom->num_ranks & 7;
-  if (eeprom->memory_type == MEMTYPE_DDR2SDR) num_ranks++;
+  if (eeprom->memory_type == MEMTYPE_DDR2) num_ranks++;
   if (num_ranks > MAX_RANKS) {
     do_error ("update decode-dimm to support a minimum of %d ranks\n",
 	      num_ranks);
     return;
   }
   rows[0] = eeprom->num_row_addr & 15;
-  if (eeprom->memory_type < MEMTYPE_DDR2SDR) rows[1] = eeprom->num_row_addr >> 4;
+  if (eeprom->memory_type < MEMTYPE_DDR2) rows[1] = eeprom->num_row_addr >> 4;
   else rows[1] = 0;
   width = eeprom->data_width + eeprom->reserved1 * 256;
   for (i=1; i<MAX_RANKS; i++)
@@ -62,7 +62,7 @@ void do_sdram (const struct sdram_spd * eeprom) {
     if (rows[i] < 7) rows[i] += 15;
 
   columns[0] = eeprom->num_col_addr & 15;
-  if (eeprom->memory_type < MEMTYPE_DDR2SDR) columns[1] = eeprom->num_col_addr >> 4;
+  if (eeprom->memory_type < MEMTYPE_DDR2) columns[1] = eeprom->num_col_addr >> 4;
   else columns[1] = 0;
   for (i=0; i<MAX_RANKS; i++) {
     if (i && !columns[i]) columns[i] = columns[0];
@@ -73,25 +73,25 @@ void do_sdram (const struct sdram_spd * eeprom) {
     size += (1 << (rows[i] + columns[i] - 20)) * eeprom->num_banks_device * (width >> 3);
 
   switch (eeprom->memory_type) {
-  case MEMTYPE_SDR: strcpy (linebuf, "SDR SDRAM"); break;
-  case MEMTYPE_DDRSDR: strcpy (linebuf, "DDR SDRAM"); break;
-  case MEMTYPE_DDR2SDR: strcpy (linebuf, "DDR2 SDRAM"); break;
+  case MEMTYPE_SDR:  strcpy (linebuf, "SDR SDRAM"); break;
+  case MEMTYPE_DDR:  strcpy (linebuf, "DDR SDRAM"); break;
+  case MEMTYPE_DDR2: strcpy (linebuf, "DDR2 SDRAM"); break;
   }
 
   switch (eeprom->memory_type) {
   case MEMTYPE_SDR:
-  case MEMTYPE_DDRSDR:
+  case MEMTYPE_DDR:
     if (eeprom->module_attr & ATTR_DDR_BUFFERED) strcat (linebuf, " buffered");
     if (eeprom->module_attr & ATTR_DDR_REGISTERED) strcat (linebuf, " registered");
     break;
-  case MEMTYPE_DDR2SDR:
+  case MEMTYPE_DDR2:
     if (eeprom->module_attr & ATTR_DDR2_REGISTERED) strcat (linebuf, " registered");
     break;
   }
 
-  if ((eeprom->config_type & CONFIG_DATA_PARITY) && 
+  if ((eeprom->config_type & CONFIG_DATA_PARITY) &&
       !(eeprom->config_type & CONFIG_DATA_ECC)) {
-    strcat (linebuf, " parity"); 
+    strcat (linebuf, " parity");
     size = ceil ((double) size * 8.0 / 9.0);
   } else if (eeprom->config_type & CONFIG_DATA_ECC) {
     strcat (linebuf, " data ECC");
@@ -139,9 +139,9 @@ void do_sdram (const struct sdram_spd * eeprom) {
     cyclen += (double) (cyclen_i >> 4);
 
     switch (eeprom->memory_type) {
-    case MEMTYPE_SDR: sprintf (linebuf, "%d", 1+cl); break;
-    case MEMTYPE_DDRSDR: sprintf (linebuf, "%3.1f", 1+(double) cl * 0.5); break;
-    case MEMTYPE_DDR2SDR: sprintf (linebuf, "%d", cl); break;
+    case MEMTYPE_SDR:  sprintf (linebuf, "%d", 1+cl); break;
+    case MEMTYPE_DDR:  sprintf (linebuf, "%3.1f", 1+(double) cl * 0.5); break;
+    case MEMTYPE_DDR2: sprintf (linebuf, "%d", cl); break;
     }
     sprintf (linebuf2, "%s-%d-%d-%d",
 	     /* cl */   linebuf,
