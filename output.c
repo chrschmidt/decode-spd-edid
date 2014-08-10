@@ -16,7 +16,10 @@ void do_error (const char * format, ...) {
 }
 
 void do_line (const char * description, const char * content) {
-  printf ("%-20s%c %s\n", description, description[0]?':':' ', content);
+  if (description)
+    printf ("%-20s%c %s\n", description, description[0]?':':' ', content);
+  else
+    printf ("\n");
 }
 
 void addlist (char * old, const char * new) {

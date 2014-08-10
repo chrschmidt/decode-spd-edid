@@ -54,6 +54,38 @@ static void do_xmp (const struct ddr3_xmp * xmp) {
 		    (double)xmp->p2_mtb_dividend / (double)xmp->p2_mtb_divisor);
 }
 
+static int ddr3_bytesused (const unsigned char x) {
+  switch (x & 15) {
+  case 0: return 0;
+  case 1: return 128;
+  case 2: return 176;
+  case 3: return 256;
+  default: return -1;
+  }
+}
+
+static int ddr3_bytestotal (const unsigned char x) {
+  switch ((x >> 4) & 7) {
+  case 0: return 0;
+  case 1: return 256;
+  default: return -1;
+  }
+}
+
+static int ddr3_crc (const char * data, int count) {
+  int crc, i;
+  crc = 0;
+  while (--count >= 0) {
+      crc = crc ^ (int) *data++ << 8;
+      for (i = 0; i < 8; i++)
+        if (crc & 0x8000)
+            crc = crc << 1 ^ 0x1021;
+        else
+            crc = crc << 1;
+  }
+  return (crc & 0xFFFF);
+}
+
 void do_ddr3 (const struct ddr3_sdram_spd * eeprom) {
   int i;
   int rows, columns, banks, ranks;
@@ -61,6 +93,7 @@ void do_ddr3 (const struct ddr3_sdram_spd * eeprom) {
   int min_tras;
   double mtb, freq;
   char linebuf[256], linebuf2[256];
+  int checksum;
 
   const int ddr3_frequencies[] = { 1066, 1000, 933, 900, 800, 667, 533, 400 };
   const int num_ddr3_frequencies = sizeof (ddr3_frequencies) / sizeof (ddr3_frequencies[0]);
@@ -76,14 +109,26 @@ void do_ddr3 (const struct ddr3_sdram_spd * eeprom) {
   }
 
   /* SPD information */
-  sprintf (linebuf, "%d.%d", eeprom->spd_revision >> 4, eeprom->spd_revision & 15);
+  sprintf (linebuf, "%d.%d", eeprom->spd_revision >> 4,
+           eeprom->spd_revision & 15);
+  if (eeprom->bytes_used_crc & 15 && eeprom->bytes_used_crc & 112) {
+    sprintf (linebuf2, ", %d/%d bytes used",
+             ddr3_bytesused (eeprom->bytes_used_crc),
+             ddr3_bytestotal (eeprom->bytes_used_crc));
+    strcat (linebuf, linebuf2);
+  }
   do_line ("SPD Revision:", linebuf);
+  checksum = ddr3_crc ((char *) eeprom,
+                       (eeprom-> bytes_used_crc & 128) ? 117 : 126);
+  sprintf (linebuf, "04%X, %scorrect", checksum,
+           checksum == eeprom->crc ? "" : "not ");
+  do_line ("Checksum", linebuf);
 
   /* Vendor information */
   sprintf (linebuf, "%s (%04x)", get_vendor16 (eeprom->manufacturer_jedec_id),
            eeprom->manufacturer_jedec_id);
   do_line ("Module Vendor", linebuf);
-  if ((eeprom->bytes_used & 15) > 1) {
+  if (ddr3_bytesused (eeprom->bytes_used_crc) > 128) {
     if (eeprom->dram_manufacturer_jedec_id) {
       sprintf (linebuf, "%s (%04x)", get_vendor16 (eeprom->dram_manufacturer_jedec_id),
                eeprom->dram_manufacturer_jedec_id);
@@ -147,4 +192,5 @@ void do_ddr3 (const struct ddr3_sdram_spd * eeprom) {
   }
   if (eeprom->xmp.id == 0x4a0c)
     do_xmp (&eeprom->xmp);
+  do_line (NULL, NULL);
 }

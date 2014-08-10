@@ -144,7 +144,7 @@ struct ddr3_xmp {
  */
 struct ddr3_sdram_spd {
   /* 0x00 */
-  u8 bytes_used;
+  u8 bytes_used_crc;
   u8 spd_revision;
   u8 memory_type;
   u8 module_type;
