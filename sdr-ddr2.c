@@ -7,6 +7,21 @@
 #include "output.h"
 #include "sdr-ddr2.h"
 
+static char * get_ddr2_memtype (const char type) {
+  switch (type) {
+  case DDR2MODULETYPE_UNDEFINED:    return "unspecified module type";
+  case DDR2MODULETYPE_RDIMM:        return "RDIMM";
+  case DDR2MODULETYPE_UDIMM:        return "UDIMM";
+  case DDR2MODULETYPE_SO_DIMM:      return "SO-DIMM";
+  case DDR2MODULETYPE_72B_SO_CDIMM: return "72b-SO-CDIMM";
+  case DDR2MODULETYPE_72B_SO_RDIMM: return "72b-SO-RDIMM";
+  case DDR2MODULETYPE_MICRO_DIMM:   return "Micro-DIMM";
+  case DDR2MODULETYPE_MINI_RDIMM:   return "Mini-RDIMM";
+  case DDR2MODULETYPE_MINI_UDIMM:   return "Mini-UDIMM";
+  }
+  return "invalid module type";
+}
+
 static int latency (int memtype, double cyclen, int value) {
   switch (memtype) {
   case MEMTYPE_SDR:
@@ -75,7 +90,10 @@ void do_sdram (const struct sdram_spd * eeprom) {
   switch (eeprom->memory_type) {
   case MEMTYPE_SDR:  strcpy (linebuf, "SDR SDRAM"); break;
   case MEMTYPE_DDR:  strcpy (linebuf, "DDR SDRAM"); break;
-  case MEMTYPE_DDR2: strcpy (linebuf, "DDR2 SDRAM"); break;
+  case MEMTYPE_DDR2:
+    strcpy (linebuf, "DDR2 ");
+    strcat (linebuf, get_ddr2_memtype(eeprom->dimm_type));
+    break;
   }
 
   switch (eeprom->memory_type) {
@@ -85,7 +103,10 @@ void do_sdram (const struct sdram_spd * eeprom) {
     if (eeprom->module_attr & ATTR_DDR_REGISTERED) strcat (linebuf, " registered");
     break;
   case MEMTYPE_DDR2:
-    if (eeprom->module_attr & ATTR_DDR2_REGISTERED) strcat (linebuf, " registered");
+    if (eeprom->dimm_type == DDR2MODULETYPE_RDIMM ||
+        eeprom->dimm_type == DDR2MODULETYPE_72B_SO_RDIMM ||
+        eeprom->dimm_type == DDR2MODULETYPE_MINI_RDIMM)
+        strcat (linebuf, " registered");
     break;
   }
 
