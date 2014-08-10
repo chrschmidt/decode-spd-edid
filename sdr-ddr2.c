@@ -22,6 +22,16 @@ static char * get_ddr2_memtype (const char type) {
   return "invalid module type";
 }
 
+static int crc (const char * data, int count) {
+  int crc, i;
+  crc = 0;
+
+  for (i=0; i<count; i++)
+    crc += *data++;
+
+  return crc & 0xFF;
+}
+
 static int latency (int memtype, double cyclen, int value) {
   switch (memtype) {
   case MEMTYPE_SDR:
@@ -34,7 +44,7 @@ static int latency (int memtype, double cyclen, int value) {
 }
 
 void do_sdram (const struct sdram_spd * eeprom) {
-  int i;
+  int i, checksum;
 
   int rows[MAX_RANKS], columns[MAX_RANKS];
   int width;
@@ -46,6 +56,18 @@ void do_sdram (const struct sdram_spd * eeprom) {
   int cl, cyclen_i;
 
   char linebuf[256], linebuf2[256];
+
+  /* SPD information */
+  sprintf (linebuf, "%d.%d", eeprom->spd_revision >> 4,
+           eeprom->spd_revision & 15);
+  sprintf (linebuf2, "%d/%d bytes used",
+           eeprom->bytes_written, 1 << eeprom->total_bytes);
+  strcat (linebuf, linebuf2);
+  do_line ("SPD Revision:", linebuf);
+  checksum = crc ((char *) eeprom, 63);
+  sprintf (linebuf, "02%X, %scorrect", checksum,
+           checksum == eeprom->checksum ? "" : "not ");
+  do_line ("Checksum", linebuf);
 
   /* Vendor information */
   if (eeprom->bytes_written >= 71) {
