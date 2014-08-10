@@ -9,15 +9,15 @@ typedef uint32_t u32;
 
 #pragma pack(1)
 /*
- * JEDEC Standard No. 21-C, Page 4.1.2.5-1 (Appendix E)
+ * JEDEC Standard No. 21-C, Page 4.1.2.5-1 (Annex E)
  * Specific PDs for Synchronous DRAM (SDRAM)
  * 4_01_02_05R11.pdf
  *
- * JEDEC Standard No. 21-C, Page 4.1.2.4-1 (Appendix D)
+ * JEDEC Standard No. 21-C, Page 4.1.2.4-1 (Annex D)
  * SPDs for DDR SDRAM
  * 4_01_02_04R13.pdf
  *
- * JEDEC Standard No. 21-C, Page 4.1.2.10-1 (Appendix X)
+ * JEDEC Standard No. 21-C, Page 4.1.2.10-1 (Annex X)
  * Specific SPDs for DDR2 SDRAM
  * 4_01_02_10R17.pdf
  */
@@ -95,7 +95,7 @@ struct sdram_spd {
 };
 
 /*
- * Intel Extreme Memory Profile (Intelo XMP) Specification Revision 1.1
+ * Intel Extreme Memory Profile (Intel XMP) Specification Revision 1.1
  */
 struct ddr3_xmp_profile {
   u8 voltage;

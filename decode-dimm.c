@@ -23,9 +23,9 @@ char * get_i2c_bus_name (const char * id) {
   struct stat statbuf;
   FILE * file;
 
-  snprintf (bus, sizeof (bus), "/sys/class/i2c-adapter/i2c-%s/device/name", id);
+  snprintf (bus, sizeof (bus), "/sys/class/i2c-dev/i2c-%s/device/name", id);
   if (stat (bus, &statbuf)) {
-    snprintf (bus, sizeof (bus), "/sys/class/i2c-adapter/i2c-%s/name", id);
+    snprintf (bus, sizeof (bus), "/sys/class/i2c-dev/i2c-%s/name", id);
     if (stat (bus, &statbuf))
       return NULL;
   }
@@ -41,7 +41,7 @@ char * get_i2c_bus_name (const char * id) {
 }
 
 int do_eeprom (int device, const unsigned char * eeprom) {
-  printf ("\nAnalyzing client 0x%02x (Probably slot %d)\n", device, device - 0x4f);
+  printf ("\nAnalyzing client 0x%02x\n", device);
   switch (eeprom[2]) {
   case MEMTYPE_SDR:
   case MEMTYPE_DDRSDR:
@@ -184,47 +184,6 @@ int try_direct (const char * adapter) {
   return count;
 }
 
-int try_at24 (const char * adapter) {
-  struct stat statbuf;
-  char filename[256];
-  int count = 0, mask = 0, i;
-  char * id = strchr (adapter, '-') + 1;
-  FILE * file;
-
-  snprintf (filename, sizeof (filename),
-	    "/sys/class/i2c-adapter/%s/new_device", adapter);
-  file = fopen (filename, "w");
-  if (!file)
-    return 0;
-  for (i=0; i<8; i++) {
-    snprintf (filename, sizeof (filename),
-	      "/sys/class/i2c-adapter/%s/%s-%04x", adapter, id, i+0x50);
-    if (stat (filename, &statbuf) == -1 && errno == ENOENT) {
-      mask |= 1 << i;
-      fprintf (file, "spd 0x%x\n", i+0x50);
-      fflush (file);
-    }
-  }
-  fclose (file);
-
-  if (mask) {
-    count = access_driver ("at24");
-    snprintf (filename, sizeof (filename),
-	      "/sys/class/i2c-adapter/%s/delete_device", adapter);
-    file = fopen (filename, "w");
-    if (file) {
-      for (i=0; i<8; i++)
-        if (mask & (1 << i)) {
-          fprintf (file, "0x%x\n", i+0x50);
-          fflush (file);
-        }
-      fclose (file);
-    }
-  }
-
-  return count;
-}
-
 int foreach_i2c_adapter (adapter_func callback, int all) {
   struct stat statbuf;
   int result;
@@ -233,17 +192,17 @@ int foreach_i2c_adapter (adapter_func callback, int all) {
   int count = 0;
   char * name;
 
-  if ((result = stat ("/sys/class/i2c-adapter", &statbuf))) {
-    fprintf (stderr, "Can't stat() /sys/class/i2c-adapter: %s\n", strerror (errno));
+  if ((result = stat ("/sys/class/i2c-dev", &statbuf))) {
+    fprintf (stderr, "Can't stat() /sys/class/i2c-dev: %s\n", strerror (errno));
     return -1;
   }
   if (!S_ISDIR(statbuf.st_mode)) {
-    fprintf (stderr, "/sys/class/i2c-adapter is not a directory.\n");
+    fprintf (stderr, "/sys/class/i2c-dev is not a directory.\n");
     return -1;
   }
 
-  if (!(sysfsdir = opendir ("/sys/class/i2c-adapter"))) {
-    fprintf (stderr, "Can't opendir /sys/class/i2c-adapter: %s\n", strerror (errno));
+  if (!(sysfsdir = opendir ("/sys/class/i2c-dev"))) {
+    fprintf (stderr, "Can't opendir /sys/class/i2c-dev: %s\n", strerror (errno));
     return -1;
   }
 
@@ -260,27 +219,6 @@ int foreach_i2c_adapter (adapter_func callback, int all) {
 }
 
 int main () {
-  int eeprom_detected = 0;
-  int at24_detected = 0;
-
-  switch (access_driver ("eeprom")) {
-  case  0: eeprom_detected = 1; // Fall Through
-  case -1: break;
-  default: return 0;
-  }
-  switch (access_driver ("at24")) {
-  case  0: at24_detected = 1; // Fall Through
-  case -1: break;
-  default: return 0;
-  }
-
-  if (at24_detected) {
-    if (foreach_i2c_adapter (try_at24, 0) > 0)
-      return 0;
-    if (foreach_i2c_adapter (try_at24, 1) > 0)
-      return 0;
-  }
-
   if (foreach_i2c_adapter (try_direct, 0) > 0)
     return 0;
   if (foreach_i2c_adapter (try_direct, 1) > 0)

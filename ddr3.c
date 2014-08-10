@@ -7,6 +7,13 @@
 #include "vendors.h"
 #include "ddr3.h"
 
+static const char * moduletypenames [] = {
+    "Undefined",    "RDIMM",        "UDIMM",        "SO-DIMM",
+    "MICRO-DIMM",   "Mini-RDIMM",   "Mini-UDIMM",   "Mini-CDIMM",
+    "72b-SO-UDIMM", "72b-SO_RDIMM", "72b-SO-CDIMM", "LRDIMM",
+    "16b-SO-UDIMM", "32b-SO_RDIMM"
+};
+
 static void do_xmp_profile (const struct ddr3_xmp_profile * profile, const char * name, const double mtb) {
   char linebuf[256], linebuf2[256];
   double freq = 1000 / (profile->min_tck * mtb);
@@ -68,11 +75,20 @@ void do_ddr3 (const struct ddr3_sdram_spd * eeprom) {
     return -1;
   }
 
+  /* SPD information */
+  sprintf (linebuf, "%d.%d", eeprom->spd_revision >> 4, eeprom->spd_revision & 15);
+  do_line ("SPD Revision:", linebuf);
+
   /* Vendor information */
-  do_line ("Module Vendor", get_vendor16 (eeprom->manufacturer_jedec_id));
+  sprintf (linebuf, "%s (%04x)", get_vendor16 (eeprom->manufacturer_jedec_id),
+           eeprom->manufacturer_jedec_id);
+  do_line ("Module Vendor", linebuf);
   if ((eeprom->bytes_used & 15) > 1) {
-    if (eeprom->dram_manufacturer_jedec_id)
-      do_line ("Chip Vendor", get_vendor16 (eeprom->dram_manufacturer_jedec_id));
+    if (eeprom->dram_manufacturer_jedec_id) {
+      sprintf (linebuf, "%s (%04x)", get_vendor16 (eeprom->dram_manufacturer_jedec_id),
+               eeprom->dram_manufacturer_jedec_id);
+      do_line ("Chip Vendor", linebuf);
+    }
     memcpy (linebuf, &(eeprom->part_number), 18);
     linebuf[18] = 0;
     do_line ("Part Number", linebuf);
@@ -91,14 +107,14 @@ void do_ddr3 (const struct ddr3_sdram_spd * eeprom) {
   width = (8 << (eeprom->bus_width & 7)) + (((eeprom->bus_width >> 3) & 3) == 1 ? 8 : 0);
   size = ranks * (1 << (rows + columns - 20)) * banks * (width >> 3);
 
-  strcpy (linebuf, "DDR3 SDRAM");
-  if ((eeprom->module_type & 15) == DDR3MODULETYPE_RDIMM ||
-      (eeprom->module_type & 15) == DDR3MODULETYPE_MINI_RDIMM)
-    strcat (linebuf, " REGISTERED");
-  if (((eeprom->bus_width >> 3) & 3) == 1)
-    strcat (linebuf, " ECC");
+  strcpy (linebuf, "DDR3 ");
+  if (eeprom->module_type & 15)
+    strcat (linebuf, moduletypenames[eeprom->module_type & 15]);
 
-  snprintf (linebuf2, 256, "%s %dMB", linebuf, size);
+  if (((eeprom->bus_width >> 3) & 3) == 1)
+    snprintf (linebuf2, 256, "%s (ECC) %d/%dMB", linebuf, size*8/9, size);
+  else
+    snprintf (linebuf2, 256, "%s %dMB", linebuf, size);
   do_line ("Part Type", linebuf2);
 
   /* voltage */
@@ -121,7 +137,7 @@ void do_ddr3 (const struct ddr3_sdram_spd * eeprom) {
 
   for (i=0; i<num_ddr3_frequencies && ddr3_frequencies[i] > (int) round(freq); i++) ;
   for (; i<num_ddr3_frequencies; i++) {
-    sprintf (linebuf2, "%d-%d-%d-%d", 
+    sprintf (linebuf2, "%d-%d-%d-%d",
 	     /* cl   */ get_cl (ddr3_frequencies[i]),
 	     /* trcd */ (int) ceil (eeprom->min_trcd * mtb * ddr3_frequencies[i] / 1000.0),
 	     /* trp  */ (int) ceil (eeprom->min_trp * mtb * ddr3_frequencies[i] / 1000.0),
