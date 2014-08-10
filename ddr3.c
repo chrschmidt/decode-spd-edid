@@ -95,7 +95,7 @@ void do_ddr3 (const struct ddr3_sdram_spd * eeprom) {
   char linebuf[256], linebuf2[256];
   int checksum;
 
-  const int ddr3_frequencies[] = { 1066, 1000, 933, 900, 800, 667, 533, 400 };
+  const int ddr3_frequencies[] = { 1500, 1466, 1400, 1333, 1200, 1066, 1000, 933, 900, 800, 667, 533, 400 };
   const int num_ddr3_frequencies = sizeof (ddr3_frequencies) / sizeof (ddr3_frequencies[0]);
 
   inline int get_cl (int freq) {
