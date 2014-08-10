@@ -58,8 +58,16 @@ void do_sdram (const struct sdram_spd * eeprom) {
   char linebuf[256], linebuf2[256];
 
   /* SPD information */
-  sprintf (linebuf, "%d.%d", eeprom->spd_revision >> 4,
-           eeprom->spd_revision & 15);
+  switch (eeprom->memory_type) {
+  case MEMTYPE_SDR:
+    sprintf (linebuf, "%d", eeprom->spd_revision);
+    break;
+  case MEMTYPE_DDR:
+  case MEMTYPE_DDR2:
+    sprintf (linebuf, "%d.%d", eeprom->spd_revision >> 4,
+             eeprom->spd_revision & 15);
+    break;
+  }
   sprintf (linebuf2, "%d/%d bytes used",
            eeprom->bytes_written, 1 << eeprom->total_bytes);
   strcat (linebuf, linebuf2);
