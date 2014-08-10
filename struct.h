@@ -1,25 +1,27 @@
 #ifndef __struct_h_included__
 #define __struct_h_included__
 
-#include <stdint.h>
-
-typedef uint8_t   u8;
-typedef uint16_t u16;
-typedef uint32_t u32;
+#define u8 unsigned char
+#define u16 unsigned short
+#define u32 unsigned int
 
 #pragma pack(1)
 /*
- * JEDEC Standard No. 21-C, Page 4.1.2.5-1 (Appendix E)
+ * JEDEC Standard No. 21-C, Page 4.1.2.5 (Annex E)
  * Specific PDs for Synchronous DRAM (SDRAM)
  * 4_01_02_05R11.pdf
  *
- * JEDEC Standard No. 21-C, Page 4.1.2.4-1 (Appendix D)
+ * JEDEC Standard No. 21-C, Page 4.1.2.4 (Annex D)
  * SPDs for DDR SDRAM
  * 4_01_02_04R13.pdf
  *
- * JEDEC Standard No. 21-C, Page 4.1.2.10-1 (Appendix X)
+ * JEDEC Standard No. 21-C, Page 4.1.2.10 (Annex X)
  * Specific SPDs for DDR2 SDRAM
  * 4_01_02_10R17.pdf
+ *
+ * JEDEC Standard No. 21-C, Page 4.1.2.11 (Annex K)
+ * Serial Presence Detect (SPD) for DDR3 SDRAM Modules
+ * 4_01_02_11R20A.pdf
  */
 typedef struct sdram_spd {
   /* 0x00 */
@@ -95,49 +97,6 @@ typedef struct sdram_spd {
 } sdram_spd_t;
 
 /*
- * Intel Extreme Memory Profile (Intelo XMP) Specifictaion Revision 1.1
- */
-typedef struct ddr3_xmp_profile {
-  u8 voltage;
-  u8 min_tck;
-  u8 min_taa;
-  u16 cas_latency;
-  u8 min_tcwl;
-  u8 min_trp;
-  u8 min_trcd;
-  u8 min_twr;
-  u8 min_tras_trc_upper_nibble;
-  u8 min_tras_lsb;
-  u8 min_trc_lsb;
-  u16 max_trefi;
-  u16 min_trfc;
-  u8 min_trtp;
-  u8 min_trrd;
-  u8 min_tfaw_upper_nibble;
-  u8 min_tfaw_lsb;
-  u8 min_twtr;
-  u8 turnaround;
-  u8 tccd_optimize;
-  u8 cmd_rate;
-  u8 self_refresh;
-  u8 reserved[9];
-  u8 vendor_personality;
-} ddr3_xmp_profile_t;
-
-typedef struct ddr3_xmp {
-  u16 id; /*0x4a0c */
-  u8 profile_org_conf;
-  u8 revision;
-  u8 p1_mtb_dividend;
-  u8 p1_mtb_divisor;
-  u8 p2_mtb_dividend;
-  u8 p2_mtb_divisor;
-  u8 reserved;
-  ddr3_xmp_profile_t profiles[2];
-  u8 unused;
-} ddr3_xmp_t;
-
-/*
  * JEDEC Standard No. 21-C, Page 4.1.2.11-1 (Annex K)
  * Serial Presence Detect (SPD) for DDR3 SDRAM Modules
  * 4_01_02_11R18.pdf
@@ -193,10 +152,7 @@ typedef struct ddr3_sdram_spd {
   u16 module_revison;
   u16 dram_manufacturer_jedec_id;
   u8 manufacturer_specific[26];
-  union {
-    u8 customer_specific[80];
-    ddr3_xmp_t xmp;
-  };
+  u8 customer_specific[80];
 } ddr3_sdram_spd_t;
 
 

@@ -1,7 +1,7 @@
 DEPFLAGS=-E -Wp,-MM
 CC=gcc
 INCLUDES=-I
-CFLAGS=-Wall -Werror -pipe -g `getconf LFS_CFLAGS` -lm
+CFLAGS=-Wall -Werror -pipe -g `getconf LFS_CFLAGS` -lm -O3
 
 .PHONY: all clean
 all: decode-dimm

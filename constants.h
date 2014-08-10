@@ -31,7 +31,7 @@ enum {
   CONFIG_DATA_ECC    = 2,
   CONFIG_ADDR_PARITY = 4
 };
-  
+
 enum {
   ATTR_DDR_BUFFERED    = 1,
   ATTR_DDR_REGISTERED  = 2,
