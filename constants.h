@@ -1,5 +1,5 @@
-#ifndef __constants_h_include__
-#define __constants_h_include__
+#ifndef __constants_h_included__
+#define __constants_h_included__
 
 enum {
   MEMTYPE_RESERVED   = 0,

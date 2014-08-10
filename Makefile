@@ -1,16 +1,22 @@
-DEPFLAGS=-E -Wp,-MM
-CC=gcc
-INCLUDES=-I
-CFLAGS=-Wall -Werror -pipe -g `getconf LFS_CFLAGS` -lm -O3
+CFLAGS=-Wall -Werror -pipe
+LDFLAGS=-lm
+LD=gcc
+DEPFLAGS=$(CPPFLAGS) $(CFLAGS) -MM
+MAKEDEPEND=$(CC) $(DEPFLAGS) -o $*.d $<
 
-.PHONY: all clean
-all: decode-dimm
+SOURCES = $(wildcard *.c)
 
-dep: .depend
-
-
-decode-dimm: decode-dimm.c struct.h vendors.h
-
+decode-dimm: $(SOURCES:.c=.o)
+	$(LD) $(LDFLAGS) -o decode-dimm $(SOURCES:.c=.o)
 
 clean:
-	rm -rf .depend *~ *.o decode-dimm
+	rm -f *.o *.d decode-dimm
+
+%.o: %.c
+	@$(MAKEDEPEND)
+	$(COMPILE.c) -o $@ $<
+
+%.d: %.c
+	$(MAKEDEPEND)
+
+-include $(SOURCES:.c=.d)
