@@ -95,7 +95,7 @@ struct sdram_spd {
 };
 
 /*
- * Intel Extreme Memory Profile (Intelo XMP) Specifictaion Revision 1.1
+ * Intel Extreme Memory Profile (Intelo XMP) Specification Revision 1.1
  */
 struct ddr3_xmp_profile {
   u8 voltage;
@@ -198,5 +198,6 @@ struct ddr3_sdram_spd {
     struct ddr3_xmp xmp;
   };
 };
+#pragma pack()
 
 #endif
