@@ -142,7 +142,6 @@ int try_direct (const char * adapter) {
   }
 
   if (!(features & (I2C_FUNC_SMBUS_READ_BYTE_DATA | I2C_FUNC_SMBUS_READ_WORD_DATA))) {
-    fprintf (stderr, "No access to the driver");
     return -1;
   }
 
