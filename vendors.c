@@ -34,7 +34,7 @@ const char * get_vendor64 (const unsigned char vendor_id[8]) {
 }
 
 const char * get_vendor16 (const unsigned int vendor_id) {
-  unsigned char vendor_id_long[8];
+  unsigned char vendor_id_long[JEDEC_BANKS];
   int i;
 
   bzero (vendor_id_long, sizeof (vendor_id_long));
@@ -44,5 +44,5 @@ const char * get_vendor16 (const unsigned int vendor_id) {
     vendor_id_long[i] = 0x7F;
   vendor_id_long[vendor_id & 127] = vendor_id >> 8;
 
-  return get_vendor64 (vendor_id_long);
+  return get_vendor (vendor_id_long);
 }
