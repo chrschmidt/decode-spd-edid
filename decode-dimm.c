@@ -209,8 +209,8 @@ int foreach_i2c_adapter (adapter_func callback, int all) {
     if (i2cadapter->d_name[0] != '.') {
       name = get_i2c_bus_name (strchr (i2cadapter->d_name, '-')+1);
       if (all == 1 || (!strncasecmp (name, "smbus", 5) && all == 0)) {
-        count += callback (i2cadapter->d_name);
         printf ("Testing %s (%s)\n", i2cadapter->d_name, name);
+        count += callback (i2cadapter->d_name);
       }
 
       free (name);
