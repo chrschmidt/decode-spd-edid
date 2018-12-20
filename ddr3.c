@@ -10,8 +10,8 @@
 static const char * moduletypenames [] = {
     "Undefined",    "RDIMM",        "UDIMM",        "SO-DIMM",
     "MICRO-DIMM",   "Mini-RDIMM",   "Mini-UDIMM",   "Mini-CDIMM",
-    "72b-SO-UDIMM", "72b-SO_RDIMM", "72b-SO-CDIMM", "LRDIMM",
-    "16b-SO-UDIMM", "32b-SO_RDIMM"
+    "72b-SO-UDIMM", "72b-SO-RDIMM", "72b-SO-CDIMM", "LRDIMM",
+    "16b-SO-DIMM", "32b-SO-DIMM"
 };
 
 static void do_xmp_profile (const struct ddr3_xmp_profile * profile, const char * name, const double mtb) {
@@ -19,7 +19,7 @@ static void do_xmp_profile (const struct ddr3_xmp_profile * profile, const char 
   double freq = 1000 / (profile->min_tck * mtb);
   int cl, i, min_tras;
 
-  snprintf (linebuf, 256, "%s profile", name);
+  snprintf (linebuf, sizeof(linebuf)-1, "%s profile", name);
   cl = ceil (profile->min_taa / profile->min_tck);
   for (i = cl; i < 15; i++)
     if (profile->cas_latency & (1 << (i-4))) {
@@ -32,9 +32,9 @@ static void do_xmp_profile (const struct ddr3_xmp_profile * profile, const char 
            (int) round (freq),
            (profile->voltage > 5) & 3, (profile->voltage & 31) * 5,
            /* cl */ cl,
-	   /* trcd */ (int) ceil (profile->min_trcd / profile->min_tck),
-	   /* trp  */ (int) ceil (profile->min_trp  / profile->min_tck),
-	   /* tras */ (int) ceil (min_tras          / profile->min_tck));
+           /* trcd */ (int) ceil (profile->min_trcd / profile->min_tck),
+           /* trp  */ (int) ceil (profile->min_trp  / profile->min_tck),
+           /* tras */ (int) ceil (min_tras          / profile->min_tck));
 
   do_line (linebuf, linebuf2);
 }
@@ -43,15 +43,15 @@ static void do_xmp (const struct ddr3_xmp * xmp) {
   char linebuf[256];
 
   sprintf (linebuf, "XMP revision %d.%d",
-	   xmp->revision >> 4, xmp->revision & 15);
+           xmp->revision >> 4, xmp->revision & 15);
   do_line ("", linebuf);
 
   if (xmp->profile_org_conf & 1)
     do_xmp_profile (&xmp->profiles[0], "Certified",
-		    (double)xmp->p1_mtb_dividend / (double)xmp->p1_mtb_divisor);
+                    (double)xmp->p1_mtb_dividend / (double)xmp->p1_mtb_divisor);
   if (xmp->profile_org_conf & 2)
     do_xmp_profile (&xmp->profiles[1], "Extreme",
-		    (double)xmp->p2_mtb_dividend / (double)xmp->p2_mtb_divisor);
+                    (double)xmp->p2_mtb_dividend / (double)xmp->p2_mtb_divisor);
 }
 
 static int ddr3_bytesused (const unsigned char x) {
@@ -92,7 +92,7 @@ void do_ddr3 (const struct ddr3_sdram_spd * eeprom) {
   int width, size;
   int min_tras;
   double mtb, freq;
-  char linebuf[256], linebuf2[256];
+  char linebuf[200], linebuf2[256];
   int checksum;
 
   const int ddr3_frequencies[] = { 1500, 1466, 1400, 1333, 1200, 1066, 1000, 933, 900, 800, 667, 533, 400 };
@@ -104,7 +104,7 @@ void do_ddr3 (const struct ddr3_sdram_spd * eeprom) {
     cl = ceil ((eeprom->min_taa*mtb) * freq / 1000.0);
     for (i = cl; i < 15; i++)
       if (eeprom->cas_latency & (1 << (i-4)))
-	return i;
+        return i;
     return -1;
   }
 
@@ -157,9 +157,9 @@ void do_ddr3 (const struct ddr3_sdram_spd * eeprom) {
     strcat (linebuf, moduletypenames[eeprom->module_type & 15]);
 
   if (((eeprom->bus_width >> 3) & 3) == 1)
-    snprintf (linebuf2, 256, "%s (ECC) %d/%dMB", linebuf, size*8/9, size);
+    snprintf (linebuf2, sizeof (linebuf2)-1, "%s (ECC) %d/%dMB", linebuf, size*8/9, size);
   else
-    snprintf (linebuf2, 256, "%s %dMB", linebuf, size);
+    snprintf (linebuf2, sizeof (linebuf2)-1, "%s %dMB", linebuf, size);
   do_line ("Part Type", linebuf2);
 
   /* voltage */

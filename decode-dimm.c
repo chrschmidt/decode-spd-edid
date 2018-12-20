@@ -16,7 +16,6 @@
 #include "sdr-ddr2.h"
 #include "ddr3.h"
 
-
 char * get_i2c_bus_name (const char * id) {
   char bus [256];
   char busname [256];
@@ -50,7 +49,7 @@ int do_eeprom (int device, const unsigned char * eeprom) {
   case 0xff:
     if (eeprom[0]==0x00 && eeprom[1]==0xff && eeprom[2]==0xff && eeprom[3]==0xff &&
         eeprom[4]==0xff && eeprom[5]==0xff && eeprom[6]==0xff && eeprom[7]==0x00)
-	return -2;
+      return -2;
   default:
     printf ("Unsupported memory type %d\n", eeprom[2]);
     return -1;
@@ -58,61 +57,10 @@ int do_eeprom (int device, const unsigned char * eeprom) {
   return 0;
 }
 
-int do_eeprom_from_file (char * filename) {
-  unsigned char eeprom[256];
-  FILE * file;
-  char * bus, * device, *busname;
-  int result;
-
-  if (!(file = fopen (filename, "r")))
-    return -1;
-  result = fread (&eeprom, 1, sizeof (eeprom), file);
-  fclose (file);
-  if (result != sizeof (eeprom))
-    return -1;
-
-  *strrchr (filename, '/') = 0;
-  bus = strrchr (filename, '/') + 1;
-  device = strchr (bus, '-');
-  *device++ = 0;
-  busname = get_i2c_bus_name (bus);
-
-  do_eeprom (strtol (device, NULL, 16), eeprom);
-
-  free (busname);
-  return 0;
-}
-
-int access_driver (const char * driver) {
-  struct stat statbuf;
-  DIR * eeproms;
-  struct dirent * eeprom;
-  char eeprom_filename[256];
-  int count = 0;
-
-  snprintf (eeprom_filename, sizeof (eeprom_filename),
-            "/sys/bus/i2c/drivers/%s", driver);
-
-  if (!(eeproms = opendir (eeprom_filename)))
-    return -1;
-
-  while ((eeprom = readdir (eeproms))) {
-    if (eeprom->d_name[0] == '.')
-      continue;
-    snprintf (eeprom_filename, sizeof (eeprom_filename),
-	      "/sys/bus/i2c/drivers/%s/%s/eeprom", driver, eeprom->d_name);
-    if (!(stat (eeprom_filename, &statbuf)))
-      if (!do_eeprom_from_file (eeprom_filename))
-        count++;
-  }
-
-  return count;
-}
-
 typedef int (*adapter_func) (const char *);
 
 int try_direct (const char * adapter) {
-  char dev_name [256];
+  char dev_name [512];
   struct stat statbuf;
   int result, features, retry;
   int device, client, address;
@@ -176,8 +124,8 @@ int try_direct (const char * adapter) {
     }
     if (result >= 0)
       result = do_eeprom (client, eeprom);
-      if (result == 0) count++;
-      else if (result == -2) return 0;
+    if (result == 0) count++;
+    else if (result == -2) return 0;
   }
   close (device);
   return count;

@@ -11,7 +11,7 @@ void do_error (const char * format, ...) {
   va_start (vl, format);
   vsnprintf (linebuf, sizeof(linebuf), format, vl);
   va_end (vl);
-  strncat (linebuf, "\n", sizeof(linebuf));
+  strncat (linebuf, "\n", sizeof(linebuf)-1);
   fprintf (stderr, "%s", linebuf);
 }
 

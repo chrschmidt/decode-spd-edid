@@ -55,7 +55,7 @@ void do_sdram (const struct sdram_spd * eeprom) {
   double cyclen;
   int cl, cyclen_i;
 
-  char linebuf[256], linebuf2[256];
+  char linebuf[200], linebuf2[256];
 
   /* SPD information */
   switch (eeprom->memory_type) {
@@ -84,7 +84,7 @@ void do_sdram (const struct sdram_spd * eeprom) {
       memcpy (linebuf, &(eeprom->part_number), 18);
       linebuf[18] = 0;
       for (i=17; i && linebuf[i] == -1; i--)
-	linebuf[i] = 0;
+        linebuf[i] = 0;
       do_line ("Part Number", linebuf);
     }
   } else do_line ("Vendor", "unknown");
@@ -94,7 +94,7 @@ void do_sdram (const struct sdram_spd * eeprom) {
   if (eeprom->memory_type == MEMTYPE_DDR2) num_ranks++;
   if (num_ranks > MAX_RANKS) {
     do_error ("update decode-dimm to support a minimum of %d ranks\n",
-	      num_ranks);
+              num_ranks);
     return;
   }
   rows[0] = eeprom->num_row_addr & 15;
@@ -151,16 +151,16 @@ void do_sdram (const struct sdram_spd * eeprom) {
   if (eeprom->config_type & CONFIG_ADDR_PARITY)
     strcat (linebuf, " address/command parity");
 
-  snprintf (linebuf2, 256, "%s %dMB", linebuf, size);
+  snprintf (linebuf2, sizeof(linebuf2)-1, "%200s %dMB", linebuf, size);
   do_line ("Part Type", linebuf2);
 
   /* organisation */
-  snprintf (linebuf2, 256, "%d rank%s, %d bank%s%s,",
+  snprintf (linebuf2, sizeof(linebuf2)-1, "%d rank%s, %d bank%s%s,",
 	    num_ranks, num_ranks == 1 ? "" : "s",
 	    eeprom->num_banks_device, eeprom->num_banks_device == 1 ? "" : "s",
 	    num_ranks > 1 ? " each" : "");
   for (i=0; i<num_ranks; i++) {
-    snprintf (linebuf, 256, "%s %d rows/%d columns (%dMBitx%d)",
+    snprintf (linebuf, sizeof(linebuf), "%s %d rows/%d columns (%dMBitx%d)",
 	      i ? "and" : linebuf2, rows[i], columns[i],
 	      (1 << (rows[i] + columns[i] - 20)) * eeprom->num_banks_device,
 	      width);
