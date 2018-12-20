@@ -1,4 +1,8 @@
-BEGIN { bank = 1; }
+BEGIN {
+	bank = 1;
+	printf ("#define 
+	printf ("static const struct jedec_vendor jedec_vendors[] = {\n");
+}
 
 /The following numbers are all in bank/ { bank++; }
 
@@ -12,3 +16,9 @@ BEGIN { bank = 1; }
 	for (i=2; i<maxind; i++) printf ("%s ", $i);
 	printf ("%s\" },\n", $maxind);
 }
+
+
+static const struct jedec_vendor jedec_vendors[] = {
+#include "vendortable.h"
+    {{0x7F, 0x7F, 0x7F, 0x7F, 0x7F, 0x7F, 0x7F, 0x7F, 0x7F}, 0}
+};

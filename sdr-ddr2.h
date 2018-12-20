@@ -3,6 +3,6 @@
 
 #include "struct.h"
 
-void do_sdram (const struct sdram_spd * eeprom);
+void do_sdram (const struct sdram_spd *eeprom);
 
 #endif
