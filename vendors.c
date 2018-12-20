@@ -6,10 +6,7 @@ struct jedec_vendor {
     const char *name;
 };
 
-static const struct jedec_vendor jedec_vendors[] = {
 #include "vendortable.h"
-    {{0x7F, 0x7F, 0x7F, 0x7F, 0x7F, 0x7F, 0x7F, 0x7F, 0x7F}, 0}
-};
 
 const char *get_vendor (const unsigned char vendor_id[JEDEC_BANKS]) {
     int i, j;

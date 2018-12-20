@@ -2,3 +2,5 @@
 *.o
 decode-dimm
 *~
+tools/*.pdf
+tools/*.txt
