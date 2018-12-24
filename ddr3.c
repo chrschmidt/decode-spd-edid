@@ -134,10 +134,10 @@ void do_ddr3 (const struct ddr3_sdram_spd *eeprom, int length) {
                  ddr3_bytestotal (eeprom->bytes_used_crc));
         strcat (linebuf, linebuf2);
     }
-    do_line ("SPD Revision:", linebuf);
+    do_line ("SPD Revision", linebuf);
     checksum = ddr3_crc ((char *) eeprom,
                          (eeprom->bytes_used_crc & 128) ? 117 : 126);
-    sprintf (linebuf, "04%X, %scorrect", checksum,
+    sprintf (linebuf, "%04X, %scorrect", checksum,
              checksum == eeprom->crc ? "" : "not ");
     do_line ("Checksum", linebuf);
 

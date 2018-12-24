@@ -76,9 +76,9 @@ void do_sdram (const struct sdram_spd *eeprom, int length) {
     sprintf (linebuf2, "%d/%d bytes used",
              eeprom->bytes_written, 1 << eeprom->total_bytes);
     strcat (linebuf, linebuf2);
-    do_line ("SPD Revision:", linebuf);
+    do_line ("SPD Revision", linebuf);
     checksum = crc ((char *) eeprom, 63);
-    sprintf (linebuf, "02%X, %scorrect", checksum,
+    sprintf (linebuf, "%02X, %scorrect", checksum,
              checksum == eeprom->checksum ? "" : "not ");
     do_line ("Checksum", linebuf);
 
