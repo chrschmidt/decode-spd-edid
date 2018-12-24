@@ -15,6 +15,7 @@
 #include "i2c-tools-i2c-dev.h"
 #include "sdr-ddr2.h"
 #include "ddr3.h"
+#include "ddr4.h"
 
 char *get_i2c_bus_name (const char *id) {
     char bus[256];
@@ -39,6 +40,27 @@ char *get_i2c_bus_name (const char *id) {
     return strdup (busname);
 }
 
+int get_eeprom_memreq (const unsigned char *eeprom, int length) {
+    switch (eeprom[2]) {
+    case MEMTYPE_SDR:
+    case MEMTYPE_DDR:
+    case MEMTYPE_DDR2:
+    case MEMTYPE_DDR3:
+        return 256;
+    case MEMTYPE_DDR4:
+    case MEMTYPE_DDR4E:
+        return get_ddr4_memreq ((struct ddr4_sdram_spd *) eeprom, length);
+    case 0xff:
+        if (eeprom[0] == 0x00 && eeprom[1] == 0xff && eeprom[2] == 0xff
+            && eeprom[3] == 0xff && eeprom[4] == 0xff && eeprom[5] == 0xff
+            && eeprom[6] == 0xff && eeprom[7] == 0x00)
+            return 0;
+    default:
+        return -1;
+    }
+    return 0;
+}
+
 int do_eeprom (int device, const unsigned char *eeprom, int length) {
     printf ("Analyzing client 0x%02x\n", device);
     switch (eeprom[2]) {
@@ -49,6 +71,10 @@ int do_eeprom (int device, const unsigned char *eeprom, int length) {
         break;
     case MEMTYPE_DDR3:
         do_ddr3 ((struct ddr3_sdram_spd *) eeprom, length);
+        break;
+    case MEMTYPE_DDR4:
+    case MEMTYPE_DDR4E:
+        do_ddr4 ((struct ddr4_sdram_spd *) eeprom, length);
         break;
     case 0xff:
         if (eeprom[0] == 0x00 && eeprom[1] == 0xff && eeprom[2] == 0xff
@@ -88,6 +114,28 @@ int read_data (int device, int features, unsigned char * buffer) {
     return bytes_read;
 }
 
+int set_ee1004_bank (int device, int bank, int client) {
+    union i2c_smbus_data data;
+    int result;
+    int SPA = bank ? EE1004_SPA1 : EE1004_SPA0;
+
+    if (ioctl (device, I2C_SLAVE_FORCE, SPA)) {
+        fprintf (stderr, "Can't select client 0x%02x: %s\n", SPA, strerror (errno));
+        return -1;
+    }
+
+    data.byte = 0;
+    result = i2c_smbus_access (device, I2C_SMBUS_WRITE, 0, I2C_SMBUS_BYTE, &data);
+    if (!result && client >= 0) {
+        result = ioctl (device, I2C_SLAVE_FORCE, client);
+        if (result) {
+            fprintf (stderr, "Can't select client 0x%02x: %s\n", client, strerror (errno));
+        }
+    }
+
+    return result;
+}
+
 int scan_adapter (const char *adapter) {
     char dev_name[512];
     struct stat statbuf;
@@ -95,6 +143,7 @@ int scan_adapter (const char *adapter) {
     int device, client;
     unsigned char eeprom[512];
     int count = 0;
+    int required;
     int bytes_read;
 
     snprintf (dev_name, 256, "/dev/%s", adapter);
@@ -140,6 +189,16 @@ int scan_adapter (const char *adapter) {
         }
         bytes_read = read_data (device, features, eeprom);
         if (bytes_read > 0) {
+            required = get_eeprom_memreq (eeprom, bytes_read);
+            if (bytes_read == 256 && required > 256) {
+                set_ee1004_bank (device, 1, client);
+                result = read_data (device, features, eeprom + 256);
+                set_ee1004_bank (device, 0, client);
+                if (result == 256) {
+                    if (memcmp (eeprom, eeprom + 256, 256))
+                        bytes_read += 256;
+                }
+            }
             result = do_eeprom (client, eeprom, bytes_read);
             if (result == 0)
                 count++;

@@ -4,6 +4,14 @@
 
 #include "output.h"
 
+const char * mtostr (int m) {
+    static char buffer [32];
+    if (m < 1024) snprintf (buffer, 31, "%dM", m);
+    else snprintf (buffer, 31, "%dG", m/1024);
+
+    return buffer;
+}
+
 void do_error (const char *format, ...) {
     char linebuf[256];
     va_list vl;

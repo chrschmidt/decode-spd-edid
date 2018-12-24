@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 
+typedef int8_t s8;
 typedef uint8_t u8;
 typedef uint16_t u16;
 typedef uint32_t u32;
@@ -197,6 +198,100 @@ struct ddr3_sdram_spd {
         u8 customer_specific[80];
         struct ddr3_xmp xmp;
     };
+};
+
+/*
+ * JEDEC Standard No. 21-C, Page 4.1.2.12-1 (Annex L)
+ * Serial Presence Detect (SPD) for DDR4 SDRAM Modules
+ * 4_01_02_AnnexL-4R27.pdf
+ */
+struct ddr4_sdram_ext_unbuffered {
+    u8 raw_card_extension_height;
+    u8 thickness;
+    u8 reference_raw_card;
+    u8 address_mapping;
+    u8 reserved[122];
+    u16 crc;
+};
+
+struct ddr4_sdram_spd {
+    /* 0x00 */
+    u8 bytes_used_crc;
+    u8 spd_revision;
+    u8 memory_type;
+    u8 module_type;
+    u8 density_banks;
+    u8 adressing;
+    u8 primary_package;
+    u8 optional1;
+    /* 0x08 */
+    u8 thermal_refresh;
+    u8 optional2;
+    u8 secondary_package;
+    u8 voltage;
+    u8 organization;
+    u8 bus_width;
+    u8 thermal_sensor;
+    u8 extended_module_type;
+    /* 0x10 */
+    u8 reserved2;
+    u8 timebases;
+    u8 min_tckavg;
+    u8 max_tckavg;
+    u8 cas_latencies[4];
+    /* 0x18 */
+    u8 min_taa;
+    u8 min_trcd;
+    u8 min_trp;
+    u8 min_tras_trc_upper;
+    u8 min_tras_lower;
+    u8 min_trc_lower;
+    u16 min_trfc1;
+    /* 0x20 */
+    u16 min_trfc2;
+    u16 min_trfc4;
+    u16 min_tfaw;
+    u8 min_trrd_s;
+    u8 min_trrd_l;
+    /* 0x28 */
+    u8 min_tcdd_l;
+    u8 reserved3[19];
+    /* 0x3c */
+    u8 bit_mapping[18];
+    /* 0x4e */
+    u8 reserved4[39];
+    /* 0x75 */
+    u8 fine_min_tccd_l;
+    u8 fine_min_trrd_l;
+    u8 fine_min_trrd_s;
+    /* 0x78 */
+    s8 fine_min_trc;
+    s8 fine_min_trp;
+    s8 fine_min_trcd;
+    s8 fine_min_taa;
+    s8 fine_max_tckavg;
+    s8 fine_min_tckavg;
+    u16 crc;
+    /* 0x80 */
+    union {
+        u8 module_specific[128];
+        struct ddr4_sdram_ext_unbuffered ext_ub;
+    };
+    /* 0x100 */
+    u8 reserved5[64];
+    /* 0x140 */
+    u16 manufacturer_jedec_id;
+    u8 manufacturing_location;
+    u16 manufacturing_date;
+    u32 serial_number;
+    u8 part_number[20];
+    u8 module_revison;
+    u16 dram_manufacturer_jedec_id;
+    u8 dram_stepping;
+    u8 manufacturer_specific[29];
+    u8 reserved6[2];
+    /* 0x180 */
+    u8 end_user_data[128];
 };
 #pragma pack()
 
