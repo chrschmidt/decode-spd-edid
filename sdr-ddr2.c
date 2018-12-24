@@ -43,7 +43,7 @@ static int latency (int memtype, double cyclen, int value) {
     return -1;
 }
 
-void do_sdram (const struct sdram_spd *eeprom) {
+void do_sdram (const struct sdram_spd *eeprom, int length) {
     int i, checksum;
 
     int rows[MAX_RANKS], columns[MAX_RANKS];
@@ -56,6 +56,11 @@ void do_sdram (const struct sdram_spd *eeprom) {
     int cl, cyclen_i;
 
     char linebuf[200], linebuf2[256];
+
+    if ((length < 2) || (length < (1 << eeprom->total_bytes))) {
+        printf ("Insufficient data read, aborting decode\n");
+        return;
+    }
 
     /* SPD information */
     switch (eeprom->memory_type) {

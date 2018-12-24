@@ -3,6 +3,6 @@
 
 #include "struct.h"
 
-void do_ddr3 (const struct ddr3_sdram_spd *eeprom);
+void do_ddr3 (const struct ddr3_sdram_spd *eeprom, int length);
 
 #endif

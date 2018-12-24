@@ -96,7 +96,7 @@ static int ddr3_crc (const char *data, int count) {
     return (crc & 0xFFFF);
 }
 
-void do_ddr3 (const struct ddr3_sdram_spd *eeprom) {
+void do_ddr3 (const struct ddr3_sdram_spd *eeprom, int length) {
     int i;
     int rows, columns, banks, ranks;
     int width, size;
@@ -118,6 +118,11 @@ void do_ddr3 (const struct ddr3_sdram_spd *eeprom) {
             if (eeprom->cas_latency & (1 << (i - 4)))
                 return i;
         return -1;
+    }
+
+    if (length != 256) {
+        printf ("Insufficient data read, aborting decode\n");
+        return;
     }
 
     /* SPD information */

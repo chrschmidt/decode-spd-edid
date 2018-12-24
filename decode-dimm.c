@@ -39,16 +39,16 @@ char *get_i2c_bus_name (const char *id) {
     return strdup (busname);
 }
 
-int do_eeprom (int device, const unsigned char *eeprom) {
+int do_eeprom (int device, const unsigned char *eeprom, int length) {
     printf ("Analyzing client 0x%02x\n", device);
     switch (eeprom[2]) {
     case MEMTYPE_SDR:
     case MEMTYPE_DDR:
     case MEMTYPE_DDR2:
-        do_sdram ((struct sdram_spd *) eeprom);
+        do_sdram ((struct sdram_spd *) eeprom, length);
         break;
     case MEMTYPE_DDR3:
-        do_ddr3 ((struct ddr3_sdram_spd *) eeprom);
+        do_ddr3 ((struct ddr3_sdram_spd *) eeprom, length);
         break;
     case 0xff:
         if (eeprom[0] == 0x00 && eeprom[1] == 0xff && eeprom[2] == 0xff
@@ -62,16 +62,40 @@ int do_eeprom (int device, const unsigned char *eeprom) {
     return 0;
 }
 
-typedef int (*adapter_func) (const char *);
+int read_data (int device, int features, unsigned char * buffer) {
+    int has_word = features & I2C_FUNC_SMBUS_READ_WORD_DATA;
+    int address, retry, result;
+    int bytes_read = 0;
+    int increment = has_word ? 2 : 1;
 
-int try_direct (const char *adapter) {
+    for (address = 0; address < 256; address += increment) {
+        retry = 0;
+        do {
+            retry++;
+            if (has_word)
+                result = i2c_smbus_read_word_data (device, address);
+            else
+                result = i2c_smbus_read_byte_data (device, address);
+        } while (result < 0 && retry < 5);
+        if (result < 0)
+            break;
+        buffer[address] = result & 0xff;
+        if (has_word)
+            buffer[address + 1] = (result >> 8) & 0xff;
+        bytes_read += increment;
+    }
+
+    return bytes_read;
+}
+
+int scan_adapter (const char *adapter) {
     char dev_name[512];
     struct stat statbuf;
-    int result, features, retry;
-    int device, client, address;
-    unsigned char eeprom[256];
-    int has_word;
+    int result, features;
+    int device, client;
+    unsigned char eeprom[512];
     int count = 0;
+    int bytes_read;
 
     snprintf (dev_name, 256, "/dev/%s", adapter);
     if ((result = stat (dev_name, &statbuf))) {
@@ -94,9 +118,7 @@ int try_direct (const char *adapter) {
         return -1;
     }
 
-    if (!
-        (features &
-         (I2C_FUNC_SMBUS_READ_BYTE_DATA | I2C_FUNC_SMBUS_READ_WORD_DATA))) {
+    if (!(features & (I2C_FUNC_SMBUS_READ_BYTE_DATA | I2C_FUNC_SMBUS_READ_WORD_DATA))) {
         return -1;
     }
 
@@ -116,37 +138,18 @@ int try_direct (const char *adapter) {
                      strerror (errno));
             continue;
         }
-
-        has_word =
-            (features & I2C_FUNC_SMBUS_READ_WORD_DATA) ==
-            I2C_FUNC_SMBUS_READ_WORD_DATA;
-        for (address = 0; address < 256; address += 1 + has_word) {
-            retry = 0;
-            do {
-                retry++;
-                if (has_word)
-                    result = i2c_smbus_read_word_data (device, address);
-                else
-                    result = i2c_smbus_read_byte_data (device, address);
-            } while (result < 0 && retry < 5);
-            if (result < 0)
-                break;
-            eeprom[address] = result & 0xff;
-            if (has_word)
-                eeprom[address + 1] = (result >> 8) & 0xff;
+        bytes_read = read_data (device, features, eeprom);
+        if (bytes_read > 0) {
+            result = do_eeprom (client, eeprom, bytes_read);
+            if (result == 0)
+                count++;
         }
-        if (result >= 0)
-            result = do_eeprom (client, eeprom);
-        if (result == 0)
-            count++;
-        else if (result == -2)
-            return 0;
     }
     close (device);
     return count;
 }
 
-int foreach_i2c_adapter (adapter_func callback, int all) {
+int foreach_i2c_adapter (int all) {
     struct stat statbuf;
     int result;
     DIR *sysfsdir;
@@ -175,7 +178,7 @@ int foreach_i2c_adapter (adapter_func callback, int all) {
             name = get_i2c_bus_name (strchr (i2cadapter->d_name, '-') + 1);
             if (all == 1 || (!strncasecmp (name, "smbus", 5) && all == 0)) {
                 printf ("Testing %s (%s)\n", i2cadapter->d_name, name);
-                count += callback (i2cadapter->d_name);
+                count += scan_adapter (i2cadapter->d_name);
             }
 
             free (name);
@@ -185,9 +188,9 @@ int foreach_i2c_adapter (adapter_func callback, int all) {
 }
 
 int main () {
-    if (foreach_i2c_adapter (try_direct, 0) > 0)
+    if (foreach_i2c_adapter (0) > 0)
         return 0;
-    if (foreach_i2c_adapter (try_direct, 1) > 0)
+    if (foreach_i2c_adapter (1) > 0)
         return 0;
 
     return 0;
