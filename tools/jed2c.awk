@@ -24,6 +24,5 @@ BEGIN {
 }
 
 END {
-	printf ("    { 0xffff, 0 }\n");
 	printf ("};\n");
 }

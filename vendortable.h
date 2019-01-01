@@ -1329,5 +1329,4 @@ static const struct jedec_vendor jedec_vendors[] = {
     { 0xC28a, "Thermaltake Technology Co Ltd" },
     { 0x438a, "Shenzhen O’Yang Maile Technology Ltd" },
     { 0xC48a, "UPMEM" },
-    { 0xffff, 0 }
 };
