@@ -1,25 +1,29 @@
 BEGIN {
-	bank = 1;
+	bank = 0;
+        bank_par = 0x80;
 	printf ("#pragma once\n");
+        printf ("#include <stdint.h>\n");
+        printf ("struct jedec_vendor { const uint16_t id; const char * name; };\n");
 	printf ("static const struct jedec_vendor jedec_vendors[] = {\n");
 }
 
-/The following numbers are all in bank/ { bank++; }
+/The following numbers are all in bank/ {
+        bank++;
+        bank_par = 0x80;
+        for (i=0; i<7; i++)
+                if (and (bank, lshift (1, i)))
+                        bank_par = xor (bank_par, 0x80);
+        bank_par += bank;
+}
 
 /[0-9]+ .* [01] [01] [01] [01] [01] [01] [01] [01] [0-9A-F]/ {
-	printf ("    { { ");
-	for (i=1; i<bank; i++) printf ("0x7F, ");
-	printf ("0x%s%s ", $NF, bank < maxbanks ? "," : "");
-	for (i=bank; i<maxbanks; i++) printf ("0x00%s ", i < (maxbanks-1) ? ",": "");
-	printf ("}, \"");
+        printf ("    { 0x%s%02x, \"", $NF, bank_par);
 	maxind = NF - 9;
 	for (i=2; i<maxind; i++) printf ("%s ", $i);
 	printf ("%s\" },\n", $maxind);
 }
 
 END {
-	printf ("    { { ");
-	for (i=1; i<maxbanks; i++) printf ("0x7F, ");
-	printf ("0x7F }, 0 }\n");
+	printf ("    { 0xffff, 0 }\n");
 	printf ("};\n");
 }
