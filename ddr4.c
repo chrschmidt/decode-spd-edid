@@ -7,8 +7,6 @@
 #include "vendors.h"
 #include "ddr4.h"
 
-//#define uu __attribute__((unused))
-
 static const char *moduletypenames[] = {
     "Extended", "RDIMM", "UDIMM", "SO-DIMM",
     "LRDIMM", "Mini-RDIMM", "Mini-UDIMM", "Reserved",
@@ -89,26 +87,26 @@ const char * get_ddr4_package (char package) {
 static int ddr4_bytesused (const unsigned char x) {
     switch (x & 15) {
     case 1:
-	return 128;
+        return 128;
     case 2:
-	return 256;
+        return 256;
     case 3:
-	return 384;
+        return 384;
     case 4:
-	return 512;
+        return 512;
     default:
-	return -1;
+        return -1;
     }
 }
 
 static int ddr4_bytestotal (const unsigned char x) {
     switch ((x >> 4) & 7) {
     case 1:
-	return 256;
+        return 256;
     case 2:
-	return 512;
+        return 512;
     default:
-	return -1;
+        return -1;
     }
 }
 
@@ -116,12 +114,12 @@ static int ddr4_crc (const char *data, int count) {
     int crc, i;
     crc = 0;
     while (--count >= 0) {
-	crc = crc ^ (int) *data++ << 8;
-	for (i = 0; i < 8; i++)
-	    if (crc & 0x8000)
-		crc = crc << 1 ^ 0x1021;
-	    else
-		crc = crc << 1;
+        crc = crc ^ (int) *data++ << 8;
+        for (i = 0; i < 8; i++)
+            if (crc & 0x8000)
+                crc = crc << 1 ^ 0x1021;
+           else
+                crc = crc << 1;
     }
     return (crc & 0xFFFF);
 }
@@ -170,17 +168,17 @@ void do_ddr4 (const struct ddr4_sdram_spd *eeprom, int length) {
     const int num_ddr4_frequencies = sizeof (ddr4_frequencies) / sizeof (ddr4_frequencies[0]);
 
     if (length < 256) {
-	printf ("Insufficient data read, aborting decode\n");
-	return;
+        printf ("Insufficient data read, aborting decode\n");
+        return;
     }
     /* SPD information */
     sprintf (linebuf, "%d.%d", eeprom->spd_revision >> 4,
              eeprom->spd_revision & 15);
     if (eeprom->bytes_used_crc & 15 && eeprom->bytes_used_crc & 112) {
-	bytes_used = ddr4_bytesused (eeprom->bytes_used_crc);
-	sprintf (linebuf2, ", %d/%d bytes used",
-	         bytes_used, ddr4_bytestotal (eeprom->bytes_used_crc));
-	strcat (linebuf, linebuf2);
+        bytes_used = ddr4_bytesused (eeprom->bytes_used_crc);
+        sprintf (linebuf2, ", %d/%d bytes used",
+                 bytes_used, ddr4_bytestotal (eeprom->bytes_used_crc));
+        strcat (linebuf, linebuf2);
     }
     do_line ("SPD Revision:", linebuf);
     checksum = ddr4_crc ((char *) eeprom, 126);
@@ -190,23 +188,23 @@ void do_ddr4 (const struct ddr4_sdram_spd *eeprom, int length) {
 
     /* Vendor information */
     if (bytes_used > 256) {
-	if (length >= 384) {
-	    sprintf (linebuf, "%s (%04x)",
-	             get_vendor16 (eeprom->manufacturer_jedec_id),
-	             eeprom->manufacturer_jedec_id);
-	    do_line ("Module Vendor", linebuf);
-	    if (eeprom->dram_manufacturer_jedec_id) {
-		sprintf (linebuf, "%s (%04x)",
-		         get_vendor16 (eeprom->dram_manufacturer_jedec_id),
-		         eeprom->dram_manufacturer_jedec_id);
-		do_line ("Chip Vendor", linebuf);
-	    }
-	    memcpy (linebuf, &(eeprom->part_number), 20);
-	    linebuf[20] = 0;
-	    do_line ("Part Number", linebuf);
-	} else {
+        if (length >= 384) {
+            sprintf (linebuf, "%s (%04x)",
+                     get_vendor16 (eeprom->manufacturer_jedec_id),
+                     eeprom->manufacturer_jedec_id);
+            do_line ("Module Vendor", linebuf);
+            if (eeprom->dram_manufacturer_jedec_id) {
+                sprintf (linebuf, "%s (%04x)",
+                         get_vendor16 (eeprom->dram_manufacturer_jedec_id),
+                         eeprom->dram_manufacturer_jedec_id);
+                do_line ("Chip Vendor", linebuf);
+            }
+            memcpy (linebuf, &(eeprom->part_number), 20);
+            linebuf[20] = 0;
+            do_line ("Part Number", linebuf);
+        } else {
             printf ("Vendor information not available, insufficient data read\n");
-	}
+        }
     }
 
     /* general module type */
@@ -220,13 +218,13 @@ void do_ddr4 (const struct ddr4_sdram_spd *eeprom, int length) {
 
     strcpy (linebuf, "DDR4 ");
     if (eeprom->module_type & 15)
-	strcat (linebuf, moduletypenames[eeprom->module_type & 15]);
+        strcat (linebuf, moduletypenames[eeprom->module_type & 15]);
 
     if (((eeprom->bus_width >> 3) & 3) == 1)
-	snprintf (linebuf2, sizeof (linebuf2) - 1, "%s (ECC) %d/%dMB",
+        snprintf (linebuf2, sizeof (linebuf2) - 1, "%s (ECC) %d/%dMB",
                   linebuf, size * 8 / 9, size);
     else
-	snprintf (linebuf2, sizeof (linebuf2) - 1, "%s %dMB", linebuf, size);
+        snprintf (linebuf2, sizeof (linebuf2) - 1, "%s %dMB", linebuf, size);
     do_line ("Part Type", linebuf2);
 
     switch (eeprom->module_type & 15) {
