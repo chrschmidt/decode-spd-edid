@@ -267,7 +267,7 @@ void do_ddr4 (const struct ddr4_sdram_spd *eeprom, int length) {
 
     /* organisation */
     snprintf (linebuf, sizeof (linebuf) - 1,
-              "%d rank%s, %d bank group%s, %d bank%s%s, %d rows/%d columns (%dMBitx%d)",
+              "%d rank%s, %d bank group%s, %d bank%s%s, %d rows/%d columns (%dMBitx%d per bank group)",
               ranks, ranks == 1 ? "" : "s",
               bankgroups, bankgroups == 1 ? "" : "s",
               banks, banks == 1 ? "" : "s", bankgroups > 1 ? " each" : "",
