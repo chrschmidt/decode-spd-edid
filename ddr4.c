@@ -271,7 +271,7 @@ void do_ddr4 (const struct ddr4_sdram_spd *eeprom, int length) {
               ranks, ranks == 1 ? "" : "s",
               bankgroups, bankgroups == 1 ? "" : "s",
               banks, banks == 1 ? "" : "s", bankgroups > 1 ? " each" : "",
-              columns, rows, (1 << (rows + columns - 20)) * banks, width);
+              rows, columns, (1 << (rows + columns - 20)) * banks, width);
     do_line ("Organisation", linebuf);
 
 
