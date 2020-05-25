@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
+#include <linux/errno.h>
 #include <dirent.h>
 #include <math.h>
 #include <fcntl.h>
@@ -54,7 +55,7 @@ int get_eeprom_memreq (const unsigned char *eeprom, int length) {
         if (eeprom[0] == 0x00 && eeprom[1] == 0xff && eeprom[2] == 0xff
             && eeprom[3] == 0xff && eeprom[4] == 0xff && eeprom[5] == 0xff
             && eeprom[6] == 0xff && eeprom[7] == 0x00)
-            return 0;
+            return 128;
     default:
         return -1;
     }
@@ -88,7 +89,8 @@ int do_eeprom (int device, const unsigned char *eeprom, int length) {
     return 0;
 }
 
-int read_data (int device, int features, unsigned char * buffer) {
+
+int read_data_ioctl (int device, int features, unsigned char * buffer) {
     int has_word = features & I2C_FUNC_SMBUS_READ_WORD_DATA;
     int address, retry, result;
     int bytes_read = 0;
@@ -103,8 +105,10 @@ int read_data (int device, int features, unsigned char * buffer) {
             else
                 result = i2c_smbus_read_byte_data (device, address);
         } while (result < 0 && retry < 5);
-        if (result < 0)
+        if (result < 0) {
+            printf ("result: %s %d\n", strerror (errno), errno);
             break;
+        }
         buffer[address] = result & 0xff;
         if (has_word)
             buffer[address + 1] = (result >> 8) & 0xff;
@@ -112,6 +116,27 @@ int read_data (int device, int features, unsigned char * buffer) {
     }
 
     return bytes_read;
+}
+
+int read_data (int device, int features, unsigned char * buffer) {
+    int result;
+    unsigned char address = 0;
+
+    result = write (device, &address, 1);
+    if (result < 0) {
+        if (errno == EOPNOTSUPP)
+            return read_data_ioctl (device, features, buffer);
+        fprintf (stderr, "Failed to reset address: %d %s\n", errno, strerror (errno));
+        return 0;
+    }
+    result = read (device, buffer, 256);
+    if (result < 0) {
+        if (errno == EOPNOTSUPP)
+            return read_data_ioctl (device, features, buffer);
+        fprintf (stderr, "Failed to read from device: %s\n", strerror (errno));
+        return 0;
+    }
+    return result;
 }
 
 int set_ee1004_bank (int device, int bank, int client) {
@@ -168,6 +193,7 @@ int scan_adapter (const char *adapter) {
     }
 
     if (!(features & (I2C_FUNC_SMBUS_READ_BYTE_DATA | I2C_FUNC_SMBUS_READ_WORD_DATA))) {
+        fprintf (stderr, "Doesn't support byte or word read\n");
         return -1;
     }
 
@@ -202,7 +228,7 @@ int scan_adapter (const char *adapter) {
             result = do_eeprom (client, eeprom, bytes_read);
             if (result == 0)
                 count++;
-        }
+        } else printf ("no data from client 0x%02x\n", client);
     }
     close (device);
     return count;
@@ -247,10 +273,7 @@ int foreach_i2c_adapter (int all) {
 }
 
 int main () {
-    if (foreach_i2c_adapter (0) > 0)
-        return 0;
-    if (foreach_i2c_adapter (1) > 0)
-        return 0;
+    foreach_i2c_adapter (1);
 
     return 0;
 }
