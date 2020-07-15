@@ -52,9 +52,9 @@ int get_eeprom_memreq (const unsigned char *eeprom, int length) {
     case MEMTYPE_DDR4E:
         return get_ddr4_memreq ((struct ddr4_sdram_spd *) eeprom, length);
     case 0xff:
-        if (eeprom[0] == 0x00 && eeprom[1] == 0xff && eeprom[2] == 0xff
-            && eeprom[3] == 0xff && eeprom[4] == 0xff && eeprom[5] == 0xff
-            && eeprom[6] == 0xff && eeprom[7] == 0x00)
+        if (eeprom[0] == 0x00 && eeprom[1] == 0xff && eeprom[2] == 0xff &&
+            eeprom[3] == 0xff && eeprom[4] == 0xff && eeprom[5] == 0xff &&
+            eeprom[6] == 0xff && eeprom[7] == 0x00)
             return 128;
     default:
         return -1;
