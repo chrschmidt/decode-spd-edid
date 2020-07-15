@@ -576,7 +576,7 @@ int get_eedid_memreq (const struct eedid_t * eeprom, int length) {
     needed_length = 128*(eeprom->extension_block_count+1);
 
     if (needed_length > 256) {
-      printf ("Warning: eeprom reader >256 needed");
+      printf ("Warning: eeprom reader >256 needed.\n");
       return 256;
     }
     return needed_length;
