@@ -106,7 +106,8 @@ int read_data_ioctl (int device, int features, unsigned char * buffer) {
                 result = i2c_smbus_read_byte_data (device, address);
         } while (result < 0 && retry < 5);
         if (result < 0) {
-            printf ("result: %s %d\n", strerror (errno), errno);
+	    if (errno != ENXIO)
+	        printf ("result: %d %s\n", errno, strerror (errno));
             break;
         }
         buffer[address] = result & 0xff;
