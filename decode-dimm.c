@@ -17,6 +17,7 @@
 #include "sdr-ddr2.h"
 #include "ddr3.h"
 #include "ddr4.h"
+#include "eedid.h"
 
 char *get_i2c_bus_name (const char *id) {
     char bus[256];
@@ -55,7 +56,7 @@ int get_eeprom_memreq (const unsigned char *eeprom, int length) {
         if (eeprom[0] == 0x00 && eeprom[1] == 0xff && eeprom[2] == 0xff &&
             eeprom[3] == 0xff && eeprom[4] == 0xff && eeprom[5] == 0xff &&
             eeprom[6] == 0xff && eeprom[7] == 0x00)
-            return 128;
+            return get_eedid_memreq ((struct eedid_t *) eeprom, length);
     default:
         return -1;
     }
@@ -81,7 +82,8 @@ int do_eeprom (int device, const unsigned char *eeprom, int length) {
         if (eeprom[0] == 0x00 && eeprom[1] == 0xff && eeprom[2] == 0xff &&
             eeprom[3] == 0xff && eeprom[4] == 0xff && eeprom[5] == 0xff &&
             eeprom[6] == 0xff && eeprom[7] == 0x00)
-            return -2;
+            do_eedid ((struct eedid_t *) eeprom, length);
+        break;
     default:
         printf ("Unsupported memory type %d\n", eeprom[2]);
         return -1;
