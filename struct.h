@@ -1,5 +1,4 @@
-#ifndef __struct_h_included__
-#define __struct_h_included__
+#pragma once
 
 #include <stdint.h>
 
@@ -294,5 +293,3 @@ struct ddr4_sdram_spd {
     u8 end_user_data[128];
 };
 #pragma pack()
-
-#endif

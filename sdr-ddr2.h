@@ -1,8 +1,5 @@
-#ifndef __sdr_ddr2_h_included__
-#define __sdr_ddr2_h_included__
+#pragma once
 
 #include "struct.h"
 
 void do_sdram (const struct sdram_spd *eeprom, int length);
-
-#endif
