@@ -228,7 +228,7 @@ int scan_adapter (const char *adapter) {
             result = do_eeprom (client, eeprom, bytes_read);
             if (result == 0)
                 count++;
-        } else printf ("no data from client 0x%02x\n", client);
+        }
     }
     close (device);
     return count;
