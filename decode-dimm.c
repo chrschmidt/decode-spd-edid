@@ -126,6 +126,8 @@ int read_data (int device, int features, unsigned char * buffer) {
     if (result < 0) {
         if (errno == EOPNOTSUPP)
             return read_data_ioctl (device, features, buffer);
+	if (errno == EIO)
+   	    return 0;
         fprintf (stderr, "Failed to reset address: %d %s\n", errno, strerror (errno));
         return 0;
     }
@@ -133,6 +135,8 @@ int read_data (int device, int features, unsigned char * buffer) {
     if (result < 0) {
         if (errno == EOPNOTSUPP)
             return read_data_ioctl (device, features, buffer);
+	if (errno == EIO)
+   	    return 0;
         fprintf (stderr, "Failed to read from device: %s\n", strerror (errno));
         return 0;
     }
