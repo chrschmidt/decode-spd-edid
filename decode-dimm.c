@@ -78,9 +78,9 @@ int do_eeprom (int device, const unsigned char *eeprom, int length) {
         do_ddr4 ((struct ddr4_sdram_spd *) eeprom, length);
         break;
     case 0xff:
-        if (eeprom[0] == 0x00 && eeprom[1] == 0xff && eeprom[2] == 0xff
-            && eeprom[3] == 0xff && eeprom[4] == 0xff && eeprom[5] == 0xff
-            && eeprom[6] == 0xff && eeprom[7] == 0x00)
+        if (eeprom[0] == 0x00 && eeprom[1] == 0xff && eeprom[2] == 0xff &&
+            eeprom[3] == 0xff && eeprom[4] == 0xff && eeprom[5] == 0xff &&
+            eeprom[6] == 0xff && eeprom[7] == 0x00)
             return -2;
     default:
         printf ("Unsupported memory type %d\n", eeprom[2]);
