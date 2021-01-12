@@ -130,18 +130,28 @@ enum cea861_datatypes {
     cea_speaker,
     cea_vesa_dtc,
     cea_reserved_2,
-    cea_extended };
+    cea_extended
+};
 
 enum cea861_ext_datatypes {
     cea_video_caps = 0,
     cea_vendor_video,
-    cea_vesa_vdd_information,
+    cea_vesa_ddd_information,
     cea_vesa_video,
     cea_hdmi_video,
     cea_colorimetry,
-    cea_misc_audio = 16,
+    cea_hdr_static_metadata,
+    cea_hdr_dynamic_metadata,
+    cea_video_format_preference = 13,
+    cea_ycbcr_420_video_data,
+    cea_ycbcr_420_capsmap,
+    cea_misc_audio,
     cea_vendor_audio,
-    cea_hdmi_audio };
+    cea_hdmi_audio,
+    cea_room_configuration,
+    cea_speaker_location,
+    cea_infoframe = 32
+};
 
 enum cea861_audio_formats {
     cea_audio_from_header = 0,
