@@ -76,7 +76,7 @@ union eighteen_bytes_descriptor_t {
     struct range_limits_t limits;
 };
 
-struct eedid_t {
+typedef struct eedid_t {
 /* 8 bytes header */
     uint8_t header[8];
 /* 10 bytes vendor & product information */
