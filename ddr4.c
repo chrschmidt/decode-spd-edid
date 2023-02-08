@@ -157,11 +157,12 @@ void do_ddr4 (const struct ddr4_sdram_spd *eeprom, int length) {
     int bytes_used = 0;
     int checksum, checksum2;
 
-    const int ddr4_frequencies[] = { 1600, 1466, 1333, 1200, 933, 667 };
+    const int ddr4_frequencies[] = { 1600, 1466, 1333, 1200, 1066, 933, 667 };
     const int ddr4_periods[] = {  625, /* 1600MHz = 625ps */
                                   682, /* 1466MHz = 682.1ps */
                                   750, /* 1333MHz = 750.2ps */
                                   833, /* 1200MHz = 833.3ps */
+                                  938, /* 1066MHz = 938.1ps */
                                  1072, /*  933MHz = 1071.8ps */
                                  1499  /*  667MHz = 1499.3ps */
     };
