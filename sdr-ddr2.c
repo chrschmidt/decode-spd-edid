@@ -55,7 +55,7 @@ void do_sdram (const struct sdram_spd *eeprom, int length) {
     double cyclen;
     int cl, cyclen_i;
 
-    char linebuf[200], linebuf2[256];
+    char linebuf[256], linebuf2[200], cls[16];
 
     if ((length < 2) || (length < (1 << eeprom->total_bytes))) {
         printf ("Insufficient data read, aborting decode\n");
@@ -137,14 +137,14 @@ void do_sdram (const struct sdram_spd *eeprom, int length) {
 
     switch (eeprom->memory_type) {
     case MEMTYPE_SDR:
-        strcpy (linebuf, "SDR SDRAM");
+        strcpy (linebuf2, "SDR SDRAM");
         break;
     case MEMTYPE_DDR:
-        strcpy (linebuf, "DDR SDRAM");
+        strcpy (linebuf2, "DDR SDRAM");
         break;
     case MEMTYPE_DDR2:
-        strcpy (linebuf, "DDR2 ");
-        strcat (linebuf, get_ddr2_memtype (eeprom->dimm_type));
+        strcpy (linebuf2, "DDR2 ");
+        strcat (linebuf2, get_ddr2_memtype (eeprom->dimm_type));
         break;
     }
 
@@ -152,32 +152,32 @@ void do_sdram (const struct sdram_spd *eeprom, int length) {
     case MEMTYPE_SDR:
     case MEMTYPE_DDR:
         if (eeprom->module_attr & ATTR_DDR_BUFFERED)
-            strcat (linebuf, " buffered");
+            strcat (linebuf2, " buffered");
         if (eeprom->module_attr & ATTR_DDR_REGISTERED)
-            strcat (linebuf, " registered");
+            strcat (linebuf2, " registered");
         break;
     case MEMTYPE_DDR2:
         if (eeprom->dimm_type == DDR2MODULETYPE_RDIMM ||
             eeprom->dimm_type == DDR2MODULETYPE_72B_SO_RDIMM ||
             eeprom->dimm_type == DDR2MODULETYPE_MINI_RDIMM)
-            strcat (linebuf, " registered");
+            strcat (linebuf2, " registered");
         break;
     }
 
     if ((eeprom->config_type & CONFIG_DATA_PARITY) &&
         !(eeprom->config_type & CONFIG_DATA_ECC)) {
-        strcat (linebuf, " parity");
+        strcat (linebuf2, " parity");
         size = ceil ((double) size * 8.0 / 9.0);
     }
     else if (eeprom->config_type & CONFIG_DATA_ECC) {
-        strcat (linebuf, " data ECC");
+        strcat (linebuf2, " data ECC");
         size = ceil ((double) size * 8.0 / 9.0);
     }
     if (eeprom->config_type & CONFIG_ADDR_PARITY)
-        strcat (linebuf, " address/command parity");
+        strcat (linebuf2, " address/command parity");
 
-    snprintf (linebuf2, sizeof (linebuf2) - 1, "%200s %dMB", linebuf, size);
-    do_line ("Part Type", linebuf2);
+    snprintf (linebuf, sizeof (linebuf) - 1, "%100s %dMB", linebuf2, size);
+    do_line ("Part Type", linebuf);
 
     /* organisation */
     snprintf (linebuf2, sizeof (linebuf2) - 1, "%d rank%s, %d bank%s%s,",
@@ -234,17 +234,17 @@ void do_sdram (const struct sdram_spd *eeprom, int length) {
 
             switch (eeprom->memory_type) {
             case MEMTYPE_SDR:
-                sprintf (linebuf, "%d", 1 + cl);
+                sprintf (cls, "%d", 1 + cl);
                 break;
             case MEMTYPE_DDR:
-                sprintf (linebuf, "%3.1f", 1 + (double) cl * 0.5);
+                sprintf (cls, "%3.1f", 1 + (double) cl * 0.5);
                 break;
             case MEMTYPE_DDR2:
-                sprintf (linebuf, "%d", cl);
+                sprintf (cls, "%d", cl);
                 break;
             }
             sprintf (linebuf2, "%s-%d-%d-%d",
-                     /* cl */   linebuf,
+                     /* cl */   cls,
                      /* trcd */ latency (eeprom->memory_type, cyclen, eeprom->min_trcd),
                      /* trp */  latency (eeprom->memory_type, cyclen, eeprom->min_trp),
                      /* tras */ (int) ceil ((double) eeprom->min_tras / cyclen));
