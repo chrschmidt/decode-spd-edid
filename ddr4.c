@@ -126,7 +126,7 @@ static int ddr4_crc (const char *data, int count) {
 
 int get_ddr4_memreq (const struct ddr4_sdram_spd *eeprom, int length) {
     if (length == 0)
-	return -1;
+        return -1;
     return ddr4_bytestotal (eeprom->bytes_used_crc);
 }
 
